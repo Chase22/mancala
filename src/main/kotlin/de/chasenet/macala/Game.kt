@@ -5,19 +5,16 @@ class Game(
     private val onGameOver: (Game) -> Unit
 ) {
     private val gameBoard = GameBoard()
-    var activePlayer = 0
+    private var activePlayer = PlayerId(0)
 
-    val activeBoard
-        get() = gameBoard.players[activePlayer]
-
-    val inactiveBoard
-        get() = gameBoard.switchBoards(activePlayer)
+    val perspective: PlayerPerspective
+        get() = PlayerPerspective(activePlayer, gameBoard)
 
     private fun takeTurn() {
-        activePlayer = if (activePlayer == 0) 1 else 0
+        activePlayer = activePlayer.enemy
 
         if (!gameBoard.hasPlayerStones(activePlayer)) {
-            inactiveBoard.moveAllToHome()
+            perspective.enemyBoard.moveAllToHome()
             onGameOver(this)
         }
     }

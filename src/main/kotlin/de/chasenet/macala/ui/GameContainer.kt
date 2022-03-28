@@ -36,7 +36,7 @@ class GameContainer : JPanel(GridBagLayout()) {
     }
 
     fun bind(game: Game, gameOver: Boolean = false) {
-        with(game.activeBoard) {
+        with(game.perspective.ownBoard) {
             pits.forEachIndexed { idx, i ->
                 val pitButton = ownPits[idx]
                 pitButton.text = i.toString()
@@ -46,7 +46,7 @@ class GameContainer : JPanel(GridBagLayout()) {
             }
             ownHome.text = home.toString()
         }
-        with(game.inactiveBoard) {
+        with(game.perspective.enemyBoard) {
             pits.forEachIndexed { idx, i -> enemyPits[idx].text = i.toString() }
             enemyHome.text = home.toString()
         }

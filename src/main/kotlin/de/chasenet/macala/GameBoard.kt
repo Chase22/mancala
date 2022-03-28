@@ -1,15 +1,15 @@
 package de.chasenet.macala
 
 class GameBoard {
-    val players = Array(2) { PlayerBoard(it) }
+    val players = Array(2) { PlayerBoard(PlayerId(it)) }
 
-    fun hasPlayerStones(player: Int) = players[player].hasStones
+    fun hasPlayerStones(player: PlayerId) = players[player.ownId].hasStones
 
     /**
      * @return If the current player gets to play another turn
      */
-    fun move(player: Int, pit: Int): Boolean {
-        var board = players.getOrNull(player) ?: throw IllegalArgumentException("No player $player")
+    fun move(player: PlayerId, pit: Int): Boolean {
+        var board = players.getOrNull(player.ownId) ?: throw IllegalArgumentException("No player $player")
         var stones = board.pits.getOrNull(pit) ?: throw IllegalArgumentException("No pit $pit")
 
         if (stones == 0) throw IllegalArgumentException("Moving an empty pit")
@@ -41,17 +41,51 @@ class GameBoard {
         return false
     }
 
-    fun switchBoards(player: Int) = if (player == 0) players[1] else players[0]
-    fun switchBoards(board: PlayerBoard) = switchBoards(board.player)
+    fun switchBoards(player: PlayerId) = players[player.enemy.ownId]
+    private fun switchBoards(board: PlayerBoard) = switchBoards(board.player)
 
     override fun toString(): String {
         return "de.chasenet.macala.ui.GameBoard(players=${players.contentToString()})"
     }
-
-
 }
 
-class PlayerBoard(val player: Int) {
+@JvmInline
+value class PlayerId(
+    private val id: Int
+) {
+    val ownId: Int
+        get() = id
+    val enemy: PlayerId
+        get() = if (id == 0) PlayerId(1) else PlayerId(0)
+}
+
+class PlayerPerspective(private val player: PlayerId, private val gameBoard: GameBoard) {
+    val ownBoard: PlayerBoard
+        get() = gameBoard.players[player.ownId]
+
+    val ownPits: Array<Int>
+        get() = ownBoard.pits
+
+    var ownHome: Int
+        get() = ownBoard.home
+        set(value) {
+            ownBoard.home = value
+        }
+
+    val enemyBoard: PlayerBoard
+        get() = gameBoard.players[player.enemy.ownId]
+
+    val enemyPits: Array<Int>
+        get() = enemyBoard.pits
+
+    var enemyHome: Int
+        get() = enemyBoard.home
+        set(value) {
+            enemyBoard.home = value
+        }
+}
+
+class PlayerBoard(val player: PlayerId) {
     var home: Int = 0
     val pits: Array<Int> = Array(6) { 4 }
 
