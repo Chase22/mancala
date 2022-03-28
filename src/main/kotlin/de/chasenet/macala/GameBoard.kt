@@ -1,5 +1,7 @@
 package de.chasenet.macala
 
+import java.util.concurrent.atomic.AtomicInteger
+
 class GameBoard {
     val players = Array(2) { PlayerBoard(PlayerId(it)) }
 
@@ -10,33 +12,39 @@ class GameBoard {
      */
     fun move(player: PlayerId, pit: Int): Boolean {
         var board = players.getOrNull(player.ownId) ?: throw IllegalArgumentException("No player $player")
-        var stones = board.pits.getOrNull(pit) ?: throw IllegalArgumentException("No pit $pit")
+        var stones = board.pits.getOrNull(pit)?.get() ?: throw IllegalArgumentException("No pit $pit")
 
         if (stones == 0) throw IllegalArgumentException("Moving an empty pit")
 
-        var currentPit = pit
-        board.pits[currentPit] = 0
+        var currentPitIdx = pit
+        board.pits[currentPitIdx].set(0)
 
         while (stones > 0) {
-            currentPit += 1
-            if (currentPit == 6) {
+            currentPitIdx += 1
+
+            if (currentPitIdx == 6) {
                 if (board.player == player) {
-                    board.home += 1
+                    board.home.addAndGet(1)
                     stones -= 1
                     if (stones == 0) return true
                 }
                 board = switchBoards(player)
-                currentPit = -1
+                currentPitIdx = -1
             } else {
-                board.pits[currentPit] += 1
+                board.pits[currentPitIdx].getAndAdd(1)
                 stones -= 1
             }
         }
-        if (board.player == player && board.pits[currentPit] == 1) {
+        val currentPit = board.pits[currentPitIdx]
+
+        if (board.player == player && currentPit.get() == 1) {
             val enemyBoard = switchBoards(board)
-            board.home += board.pits[currentPit] + enemyBoard.pits[5 - currentPit]
-            board.pits[currentPit] = 0
-            enemyBoard.pits[5 - currentPit] = 0
+            val enemyPit = enemyBoard.pits[5 - currentPitIdx]
+
+            board.home.addAndGet(currentPit.get())
+            board.home.addAndGet(enemyPit.get())
+            currentPit.set(0)
+            enemyPit.set(0)
         }
         return false
     }
@@ -63,10 +71,10 @@ class PlayerPerspective(private val player: PlayerId, private val gameBoard: Gam
     val ownBoard: PlayerBoard
         get() = gameBoard.players[player.ownId]
 
-    val ownPits: Array<Int>
+    val ownPits: Array<AtomicInteger>
         get() = ownBoard.pits
 
-    var ownHome: Int
+    var ownHome: AtomicInteger
         get() = ownBoard.home
         set(value) {
             ownBoard.home = value
@@ -75,10 +83,10 @@ class PlayerPerspective(private val player: PlayerId, private val gameBoard: Gam
     val enemyBoard: PlayerBoard
         get() = gameBoard.players[player.enemy.ownId]
 
-    val enemyPits: Array<Int>
+    val enemyPits: Array<AtomicInteger>
         get() = enemyBoard.pits
 
-    var enemyHome: Int
+    var enemyHome: AtomicInteger
         get() = enemyBoard.home
         set(value) {
             enemyBoard.home = value
@@ -86,11 +94,11 @@ class PlayerPerspective(private val player: PlayerId, private val gameBoard: Gam
 }
 
 class PlayerBoard(val player: PlayerId) {
-    var home: Int = 0
-    val pits: Array<Int> = Array(6) { 4 }
+    var home: AtomicInteger = AtomicInteger(0)
+    val pits: Array<AtomicInteger> = Array(6) { AtomicInteger(4) }
 
     val hasStones: Boolean
-        get() = pits.sum() > 0
+        get() = pits.sumInt() > 0
 
     override fun toString(): String {
         return "de.chasenet.macala.ui.PlayerBoard(player=$player, home=$home, pits=${pits.contentToString()})"
@@ -98,6 +106,9 @@ class PlayerBoard(val player: PlayerId) {
 
     fun moveAllToHome() {
         home = pits.sum()
-        pits.forEachIndexed { idx, _ -> pits[idx] = 0 }
+        pits.forEach { it.set(0) }
     }
 }
+
+fun Array<AtomicInteger>.sum(): AtomicInteger = AtomicInteger(sumInt())
+fun Array<AtomicInteger>.sumInt(): Int = sumOf { it.get() }
