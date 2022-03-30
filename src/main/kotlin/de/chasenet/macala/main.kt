@@ -1,20 +1,19 @@
 package de.chasenet.macala
 
 import de.chasenet.macala.ui.MainFrame
-import javax.swing.SwingUtilities
 
 fun main() {
-    lateinit var mainFrame: MainFrame
+    val game = Game()
 
-    val game = Game({
-        SwingUtilities.invokeLater {
-            mainFrame.gameContainer.bind(it)
-        }
-    }) {
-        SwingUtilities.invokeLater {
-            mainFrame.gameContainer.bind(it, true)
-        }
-    }
+    val mainFrame = MainFrame(game)
+    val mainFrame2 = MainFrame(game)
 
-    mainFrame = MainFrame(game)
+    mainFrame.player = game.registerPlayer(mainFrame, "Player")
+    mainFrame.title = "Player"
+
+    mainFrame2.player = game.registerPlayer(mainFrame2, "Player2")
+    mainFrame2.title = "Player2"
+
+    game.startGame()
+
 }

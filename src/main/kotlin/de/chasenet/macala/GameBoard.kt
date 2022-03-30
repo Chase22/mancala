@@ -67,9 +67,9 @@ value class PlayerId(
         get() = if (id == 0) PlayerId(1) else PlayerId(0)
 }
 
-class PlayerPerspective(private val player: PlayerId, private val gameBoard: GameBoard) {
+class PlayerPerspective(private val player: Int, private val gameBoard: GameBoard) {
     val ownBoard: PlayerBoard
-        get() = gameBoard.players[player.ownId]
+        get() = gameBoard.players[player]
 
     val ownPits: Array<AtomicInteger>
         get() = ownBoard.pits
@@ -81,7 +81,7 @@ class PlayerPerspective(private val player: PlayerId, private val gameBoard: Gam
         }
 
     val enemyBoard: PlayerBoard
-        get() = gameBoard.players[player.enemy.ownId]
+        get() = gameBoard.players[Game.switchPlayer(player)]
 
     val enemyPits: Array<AtomicInteger>
         get() = enemyBoard.pits

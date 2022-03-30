@@ -1,6 +1,7 @@
 package de.chasenet.macala.ui
 
 import de.chasenet.macala.Game
+import de.chasenet.macala.Player
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
@@ -35,18 +36,18 @@ class GameContainer : JPanel(GridBagLayout()) {
         insets = Insets(5, 5, 5, 5)
     }
 
-    fun bind(game: Game, gameOver: Boolean = false) {
-        with(game.perspective.ownBoard) {
+    fun bind(player: Player, game: Game, gameOver: Boolean = false) {
+        with(player.boardPerspective.ownBoard) {
             pits.forEachIndexed { idx, i ->
                 val pitButton = ownPits[idx]
                 pitButton.text = i.toString()
                 pitButton.removeActionListener(pitButton.actionListeners.firstOrNull())
 
-                if (!gameOver) pitButton.addActionListener { game.move(idx) }
+                if (!gameOver) pitButton.addActionListener { game.move(player.playerId, idx) }
             }
             ownHome.text = home.toString()
         }
-        with(game.perspective.enemyBoard) {
+        with(player.boardPerspective.enemyBoard) {
             pits.forEachIndexed { idx, i -> enemyPits[idx].text = i.toString() }
             enemyHome.text = home.toString()
         }
