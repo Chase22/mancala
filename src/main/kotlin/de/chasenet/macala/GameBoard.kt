@@ -105,7 +105,7 @@ class PlayerBoard(val player: PlayerId) {
     }
 
     fun moveAllToHome() {
-        home = pits.sum()
+        home.getAndAdd(pits.sum().get())
         pits.forEach { it.set(0) }
     }
 }
