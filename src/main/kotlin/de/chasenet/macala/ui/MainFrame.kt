@@ -24,7 +24,7 @@ class MainFrame(private val game: Game) : JFrame(), PlayerEvents {
     override fun onTurn(game: Game) = gameContainer.bind(player, game)
     override fun onBoardUpdated(game: Game) = gameContainer.bind(player, game)
 
-    override fun onGameEnd(game: Game, winningPlayer: Int) {
+    override fun onGameEnd(game: Game, winningPlayer: Int?) {
         gameContainer.bind(player, game, true)
     }
 }

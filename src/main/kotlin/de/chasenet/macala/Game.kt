@@ -6,7 +6,7 @@ class Game(
     private val gameBoard = GameBoard()
     private var activePlayer = 0
 
-    private val players: MutableList<Player> = ArrayList(2)
+    val players: MutableList<Player> = ArrayList(2)
 
     fun registerPlayer(events: PlayerEvents, name: String): Player {
         if (gameState != GameState.STARTING) throw IllegalStateException("Cannot change players in a running game")
@@ -27,8 +27,13 @@ class Game(
         players[0].onTurn(this)
     }
 
+    fun observe(player: Int, events: PlayerEvents): Player {
+        players[player] = players[player].copy(observers = players[player].observers + events)
+        return players[player]
+    }
+
     fun move(player: Int, pit: Int) {
-        activePlayer = if (gameBoard.move(PlayerId(player), pit)) player else Companion.switchPlayer(player)
+        activePlayer = if (gameBoard.move(PlayerId(player), pit)) player else switchPlayer(player)
 
         players.forEach { it.onBoardUpdated(this) }
         startTurn(activePlayer)
@@ -41,7 +46,12 @@ class Game(
             gameState = GameState.ENDED
             gameBoard.players.forEach { it.moveAllToHome() }
 
-            val winningPlayer = players.maxByOrNull { it.boardPerspective.ownHome.get() }!!.playerId
+
+            val homes = players.map { it.playerId to it.boardPerspective.ownHome.get() }
+            val winningPlayer =
+                if (homes[0].second == homes[1].second) null
+                else homes.maxByOrNull { it.second }!!.first
+
             players.forEach {
                 it.onGameEnd(
                     this,
