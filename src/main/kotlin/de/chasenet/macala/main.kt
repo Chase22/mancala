@@ -1,5 +1,6 @@
 package de.chasenet.macala
 
+import de.chasenet.macala.ai.RandomAgent
 import de.chasenet.macala.ui.MainFrame
 
 fun main() {
@@ -10,7 +11,7 @@ fun main() {
     mainFrame.player = game.registerPlayer(mainFrame, "Player")
     mainFrame.title = "Player"
 
-    AI(game, "Player2")
+    RandomAgent(game, "Player2")
 
     game.startGame()
 
